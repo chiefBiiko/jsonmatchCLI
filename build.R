@@ -23,7 +23,9 @@ compileSRC2EXE <- function(SRC) {
   # compile 2 executable
   SRC <- normalizePath(SRC)
   EXE <- normalizePath(file.path(getwd(), if (is.win) 'jm.exe' else 'jm'))
-  gppargs <- paste(paste0('"', SRC, '"'), '-o', paste0('"', EXE, '"'))
+  gppargs <- paste0('-std=c++11 -o "', EXE, '" "', SRC, '"')
   if (system2('g++', gppargs) != 0L) stop('build failed')
+  message('Running the jm executable requires that the R executable is ',
+          'covered by your PATH')
   return(EXE)
 }
