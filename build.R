@@ -6,10 +6,10 @@
 #' @return Character. Full path to the \code{jm} executable.
 #' 
 #' @export
-compileSRC2EXE <- function(SRC) {
+compileSRC2EXE <- function(SRC, ARGS) {
   stopifnot(is.character(SRC), length(SRC) == 1L, nchar(SRC) != 0L)
   is.win <- grepl('win', .Platform$OS.type, TRUE, TRUE)
-  # check 4 g++
+  # check 4 g++ and R
   if (system2('g++', '--version', stdout=NULL, stderr=NULL) != 0L) {
     if (is.win) {
       stop('g++.exe not available\nit is included in the Rtools toolchain\n', 
@@ -20,12 +20,14 @@ compileSRC2EXE <- function(SRC) {
            'install g++ and make sure its directory is on your PATH')
     }
   }
+  if (system2('R', '--version', stdout=NULL, stderr=NULL) != 0L) {
+    warning('R executable not on PATH\nappend ', normalizePath(R.home('bin')))
+  }
   # compile 2 executable
   SRC <- normalizePath(SRC)
   EXE <- normalizePath(file.path(getwd(), if (is.win) 'jm.exe' else 'jm'))
-  gppargs <- paste0('-std=c++11 -o "', EXE, '" "', SRC, '"')
+  gppargs <- paste0(ifelse(missing(ARGS), '', paste0(ARGS, ' ', collapse=' ')), 
+                    '-o "', EXE, '" "', SRC, '"')
   if (system2('g++', gppargs) != 0L) stop('build failed')
-  message('Running the jm executable requires that the R executable is ',
-          'covered by your PATH')
   return(EXE)
 }
