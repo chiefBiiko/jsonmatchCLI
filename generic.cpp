@@ -1,11 +1,10 @@
-#include <cstdlib>
 #include <stdio.h>
 #include <string>
 
 const std::string exec(const std::string cmd) {
-  const unsigned int buflen = 128;
-  char buffer[buflen];
-  std::string result = "";
+  const unsigned int BUFLEN = 128;
+  char buffer[BUFLEN];
+  std::string out;
   #ifdef _WIN32
   FILE* pipe = _popen(cmd.c_str(), "r");
   #else
@@ -17,7 +16,7 @@ const std::string exec(const std::string cmd) {
   }
   try {
     while (!feof(pipe)) {
-      if (fgets(buffer, buflen, pipe) != NULL) result.append(buffer, buflen);
+      if (fgets(buffer, BUFLEN, pipe) != NULL) out.append(buffer, BUFLEN);
     }
   } catch (...) {
     #ifdef _WIN32
@@ -33,7 +32,7 @@ const std::string exec(const std::string cmd) {
   #else
   pclose(pipe);
   #endif
-  return result;
+  return out;
 }
 
 int main(const int argc, const char* argv[]) {
