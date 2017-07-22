@@ -1,5 +1,4 @@
 #include <cstdlib>
-#include <sstream>
 #include <stdio.h>
 #include <string>
 
@@ -13,10 +12,12 @@ const std::string exec(const std::string cmd) {
   #endif
   if (!pipe) {
     printf("popen() failed!");
-    return std::string("");
+    return std::string(" ");
   }
   try {
-    while (!feof(pipe)) if (fgets(buffer, 128, pipe) != NULL) result += buffer;
+    while (!feof(pipe)) {
+      if (fgets(buffer, 128, pipe) != NULL) result.append(buffer, 128);
+    }
   } catch (...) {
     #ifdef _WIN32
     _pclose(pipe);
@@ -38,21 +39,13 @@ int main(const int argc, const char* argv[]) {
     printf("gimme at least 2 arguments");
     return 1;
   }
-  const char BLNK = ' ';
-  const char DELM = ',';
-  const char QUOT = '\'';
-  const char* R = "R --vanilla --slave -e";
-  const char* FRNT = "\"jsonmatch::jsonmatch(";
-  const char* BACK = ")\"";
-  const char* STDOUTERR = "2>&1";
-  std::stringstream ss;
-  ss << R << BLNK << FRNT;
-  ss << QUOT << argv[1] << QUOT << DELM;
-  ss << QUOT << argv[2] << QUOT;
-  if (argc >= 4) ss << DELM << argv[3];
-  if (argc == 5) ss << DELM << argv[4];
-  ss << BACK << BLNK << STDOUTERR;
-  std::string rtn = exec(ss.str());
+  std::string s;
+  s.append("R --vanilla --slave -e \"jsonmatch::jsonmatch('")
+   .append(argv[1]).append("','").append(argv[2]).append("'");
+  if (argc >= 4) s.append(",").append(argv[3]);
+  if (argc == 5) s.append(",").append(argv[4]);
+  s.append(")\" 2>&1");
+  const std::string rtn = exec(s);
   printf(rtn.c_str());
-  return rtn != "" ? 0 : 1;
+  return s.compare(" ") ? 0 : 1;
 }
