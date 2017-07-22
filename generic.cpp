@@ -12,7 +12,7 @@ const std::string exec(const std::string cmd) {
   #endif
   if (!pipe) {
     printf("popen() failed!");
-    return std::string(" ");
+    return std::string("");
   }
   try {
     while (!feof(pipe)) {
@@ -36,7 +36,7 @@ const std::string exec(const std::string cmd) {
 
 int main(const int argc, const char* argv[]) {
   if (argc < 3) {
-    printf("gimme at least 2 arguments");
+    printf("gimme at least 2 arguments\n");
     return 1;
   }
   std::string s;
@@ -47,5 +47,5 @@ int main(const int argc, const char* argv[]) {
   s.append(")\" 2>&1");
   const std::string rtn = exec(s);
   printf(rtn.c_str());
-  return s.compare(" ") ? 0 : 1;
+  return s.compare("") ? 0 : 1;
 }
