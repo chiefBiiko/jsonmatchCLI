@@ -1,13 +1,16 @@
 # build.R 4 jsonmatchCLI
 
-#' Build an executable 4 jsonmatch
+#' Build an executable from a C++ source file with g++
 #' 
-#' @param SRC. Character. Filename of source: 'generic.cpp'.
-#' @return Character. Full path to the \code{jm} executable.
+#' @param src Character. Filename of source.cpp.
+#' @param exe Character. Filename for executable without extension. 
+#' Default: \code{jm}.
+#' @param argz Character. Vector of additional arguments to \code{g++}.
+#' @return Character. Full path to the executable.
 #' 
 #' @export
-compileSRC2EXE <- function(SRC, ARGS) {
-  stopifnot(is.character(SRC), length(SRC) == 1L, nchar(SRC) != 0L)
+compileSRC2EXE <- function(src, exe='jm', argz=NULL) {
+  stopifnot(file.exists(src))
   is.win <- grepl('win', .Platform$OS.type, TRUE, TRUE)
   # check 4 g++ and R
   if (system2('g++', '--version', stdout=NULL, stderr=NULL) != 0L) {
@@ -24,10 +27,10 @@ compileSRC2EXE <- function(SRC, ARGS) {
     warning('R executable not on PATH\nappend ', normalizePath(R.home('bin')))
   }
   # compile 2 executable
-  SRC <- normalizePath(SRC)
-  EXE <- normalizePath(file.path(getwd(), if (is.win) 'jm.exe' else 'jm'))
-  gppargs <- paste0(ifelse(missing(ARGS), '', paste0(ARGS, ' ', collapse=' ')), 
+  SRC <- normalizePath(src)
+  EXE <- normalizePath(file.path(getwd(), ifelse(is.win, paste0(exe, '.exe'), exe)))
+  GPPARGS <- paste0(ifelse(is.null(argz), '', paste0(argz, ' ', collapse=' ')), 
                     '-o "', EXE, '" "', SRC, '"')
-  if (system2('g++', gppargs) != 0L) stop('build failed')
+  if (system2('g++', GPPARGS) != 0L) stop('build failed')
   return(EXE)
 }
