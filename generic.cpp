@@ -1,19 +1,20 @@
-#include <iostream>
 #include <cstdlib>
 #include <sstream>
-#include <stdexcept>
 #include <stdio.h>
 #include <string>
 
-std::string exec(const char* cmd) {
+const std::string exec(const std::string cmd) {
   char buffer[128];
   std::string result = "";
   #ifdef _WIN32
-  FILE* pipe = _popen(cmd, "r");
+  FILE* pipe = _popen(cmd.c_str(), "r");
   #else
-  FILE* pipe = popen(cmd, "r");
+  FILE* pipe = popen(cmd.c_str(), "r");
   #endif
-  if (!pipe) throw std::runtime_error("popen() failed!");
+  if (!pipe) {
+    printf("popen() failed!");
+    return std::string("");
+  }
   try {
     while (!feof(pipe)) if (fgets(buffer, 128, pipe) != NULL) result += buffer;
   } catch (...) {
@@ -34,7 +35,7 @@ std::string exec(const char* cmd) {
 
 int main(const int argc, const char* argv[]) {
   if (argc < 3) {
-    std::cerr << std::string("gimme at least 2 arguments") << std::endl;
+    printf("gimme at least 2 arguments");
     return 1;
   }
   const char BLNK = ' ';
@@ -51,6 +52,7 @@ int main(const int argc, const char* argv[]) {
   if (argc >= 4) ss << DELM << argv[3];
   if (argc == 5) ss << DELM << argv[4];
   ss << BACK << BLNK << STDOUTERR;
-  std::cout << exec(ss.str().c_str());
-  return 0;
+  std::string rtn = exec(ss.str());
+  printf(rtn.c_str());
+  return rtn != "" ? 0 : 1;
 }
