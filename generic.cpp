@@ -36,7 +36,7 @@ const std::string exec(const std::string cmd) {
 }
 
 int main(const int argc, const char* argv[]) {
-  const unsigned int ZERO = 0, ONE = 1, TWO = 2, THREE = 3, FOUR = 4, FIVE = 5;
+  const int ZERO = 0, ONE = 1, TWO = 2, THREE = 3, FOUR = 4, FIVE = 5;
   if (argc < THREE) {
     printf("gimme at least 2 arguments\n");
     return ONE;
