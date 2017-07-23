@@ -47,6 +47,10 @@ int main(const int argc, const char* argv[]) {
   if (argc >= FOUR) s.append(",").append(argv[THREE]);
   if (argc == FIVE) s.append(",").append(argv[FOUR]);
   s.append(")\" 2>&1");
+  //
+//printf(s.c_str());
+//return ONE;
+  //
   const std::string rtn = exec(s);
   printf(rtn.c_str());
   return rtn.compare("") ? ZERO : ONE;
