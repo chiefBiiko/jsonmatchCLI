@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string>
 
-const std::string exec(const std::string cmd) {
+std::string exec(const std::string cmd) {
   const unsigned int BUFLEN = 128;
   char buffer[BUFLEN];
   std::string out;
@@ -35,13 +35,13 @@ const std::string exec(const std::string cmd) {
   return out;
 }
 
-const std::string readInFile(const char* filename) {
-  int c, NEWLINE_CHAR_COUNT;
+std::string readInFile(const char* filename) {
   #ifdef _WIN32
-  NEWLINE_CHAR_COUNT = 2;
+  const int NEWLINE_CHAR_COUNT = 2;
   #else
-  NEWLINE_CHAR_COUNT = 1;
+  const int NEWLINE_CHAR_COUNT = 1;
   #endif
+  int c;
   std::string in;
   FILE* fp = fopen(filename, "r");
   if (fp == NULL) {
@@ -61,6 +61,16 @@ const std::string readInFile(const char* filename) {
   fclose(fp);
   in.resize(in.size() - NEWLINE_CHAR_COUNT);
   return in;
+}
+
+int fileExists(const char* filename) {
+  FILE* fp;
+  if ((fp = fopen(filename, "r"))) {
+    fclose(fp);
+    return 1; 
+  } else {
+    return 0;
+  }
 }
 
 /*
