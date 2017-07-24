@@ -12,11 +12,11 @@ const std::string exec(const std::string cmd) {
   #endif
   if (!pipe) {
     printf("popen() failed\n");
-    return std::string("");
+    exit(1);
   }
   try {
     while (!feof(pipe)) {
-      if (fgets(buffer, BUFLEN, pipe) != NULL) out.append(buffer, BUFLEN);
+      if (fgets(buffer, BUFLEN, pipe) != NULL) out += buffer;
     }
   } catch (...) {
     #ifdef _WIN32
@@ -24,8 +24,8 @@ const std::string exec(const std::string cmd) {
     #else
     pclose(pipe);
     #endif
-    printf("pipe failed\n");
-    return std::string("");
+    printf("pipe error\n");
+    exit(1);
   }
   #ifdef _WIN32
   _pclose(pipe);
@@ -35,26 +35,55 @@ const std::string exec(const std::string cmd) {
   return out;
 }
 
+const std::string readInFile(const char* filename) {
+  int c, NEWLINE_CHAR_COUNT;
+  #ifdef _WIN32
+  NEWLINE_CHAR_COUNT = 2;
+  #else
+  NEWLINE_CHAR_COUNT = 1;
+  #endif
+  std::string in;
+  FILE* fp = fopen(filename, "r");
+  if (fp == NULL) {
+    printf("fopen() failed\n");
+    exit(1);
+  }
+  try {
+    do {
+      c = fgetc(fp);
+      in += c;
+    } while (c != EOF);
+  } catch (...) {
+    fclose(fp);
+    printf("file error\n");
+    exit(1);
+  }
+  fclose(fp);
+  in.resize(in.size() - NEWLINE_CHAR_COUNT);
+  return in;
+}
+
 /*
- * TODO: read argv[1] from file instead from cli 2 avoid loosing quotes
+ * TODO:
+ * -escape quotes in read-in file
+ * -allow stdin or file input -> named argv? or check if file exists!
+ * -makeindi string concat stuff
  */
 int main(const int argc, const char* argv[]) {
-  const int ZERO = 0, ONE = 1, TWO = 2, THREE = 3, FOUR = 4, FIVE = 5;
-  if (argc < THREE) {
-    printf("gimme at least %d arguments\n", TWO);
-    return ONE;
+  if (argc < 3) {
+    printf("gimme at least 2 arguments\n");
+    exit(1);
   }
+  std::string in = readInFile(argv[1]);
   std::string s;
   s.append("R --vanilla --slave -e jsonmatch::jsonmatch('")
-   .append(argv[ONE]).append("','").append(argv[TWO]).append("'");
-  if (argc >= FOUR) s.append(",").append(argv[THREE]);
-  if (argc == FIVE) s.append(",").append(argv[FOUR]);
-  s.append(") 2>&1");
+   .append(in.c_str()).append("','").append(argv[2]).append("'");
+  if (argc >= 4) s.append(",").append(argv[3]);
+  if (argc == 5) s.append(",").append(argv[4]);
+  s.append(") 2>&1\n");
   //
   printf(s.c_str());
-  return ONE;
   //
-  const std::string rtn = exec(s);
-  printf(rtn.c_str());
-  return rtn.compare("") ? ZERO : ONE;
+  printf(exec(s).c_str());
+  return 0;
 }
