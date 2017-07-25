@@ -51,6 +51,7 @@ std::string readInFile(const char* filename) {
   try {
     do {
       c = fgetc(fp);
+      if (c == '"') in += "\\\\\\";
       in += c;
     } while (c != EOF);
   } catch (...) {
@@ -65,7 +66,7 @@ std::string readInFile(const char* filename) {
 
 int fileExists(const char* filename) {
   FILE* fp;
-  if ((fp = fopen(filename, "r"))) {
+  if ((fp = fopen(filename, "r")) != NULL) {
     fclose(fp);
     return 1; 
   } else {
@@ -75,9 +76,10 @@ int fileExists(const char* filename) {
 
 /*
  * TODO:
- * -escape quotes in read-in file
- * -allow stdin or file input -> named argv? or check if file exists!
- * -makeindi string concat stuff
+ * -escape quotes in read-in file - DONE
+ * -test file exists!
+ * -makeindi string concat stuff and use std::string 4 dynamic growing only
+ * -
  */
 int main(const int argc, const char* argv[]) {
   if (argc < 3) {
@@ -85,15 +87,15 @@ int main(const int argc, const char* argv[]) {
     exit(1);
   }
   std::string in = readInFile(argv[1]);
-  std::string s;
-  s.append("R --vanilla --slave -e jsonmatch::jsonmatch('")
+  std::string cmd;
+  cmd.append("R --vanilla --slave -e jsonmatch::jsonmatch('")
    .append(in.c_str()).append("','").append(argv[2]).append("'");
-  if (argc >= 4) s.append(",").append(argv[3]);
-  if (argc == 5) s.append(",").append(argv[4]);
-  s.append(") 2>&1\n");
-  //
+  if (argc >= 4) cmd.append(",").append(argv[3]);
+  if (argc == 5) cmd.append(",").append(argv[4]);
+  cmd.append(") 2>&1\n");
+  /*
   printf(s.c_str());
-  //
-  printf(exec(s).c_str());
+  */
+  printf(exec(cmd).c_str());
   return 0;
 }
