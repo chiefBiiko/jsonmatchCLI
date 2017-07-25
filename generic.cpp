@@ -35,14 +35,16 @@ std::string exec(const std::string cmd) {
   return out;
 }
 
+void trimBothSides(std::string s) {  // modifies in place
+  const char* WS = " \t\n\r\f\v";
+  s.erase(0, s.find_first_not_of(WS));
+  s.erase(s.find_last_not_of(WS) + 1);
+}
+
 std::string readInFile(const char* filename) {
-  #ifdef _WIN32
-  const int NEWLINE_CHAR_COUNT = 2;
-  #else
-  const int NEWLINE_CHAR_COUNT = 1;
-  #endif
+  const int TERMINATORS = 2;  // y 2? thought '\0' is one character??
   int c;
-  std::string in;
+  std::string input;
   FILE* fp = fopen(filename, "r");
   if (fp == NULL) {
     printf("fopen() failed\n");
@@ -51,8 +53,8 @@ std::string readInFile(const char* filename) {
   try {
     do {
       c = fgetc(fp);
-      if (c == '"') in += "\\\\\\";
-      in += c;
+      if (c == '"') input += "\\\\\\";
+      input += c;
     } while (c != EOF);
   } catch (...) {
     fclose(fp);
@@ -60,11 +62,12 @@ std::string readInFile(const char* filename) {
     exit(1);
   }
   fclose(fp);
-  in.resize(in.size() - NEWLINE_CHAR_COUNT);
-  return in;
+  trimBothSides(input);
+  input.resize(input.size() - TERMINATORS);
+  return input;
 }
 
-int fileExists(const char* filename) {
+bool fileExists(const char* filename) {
   FILE* fp;
   if ((fp = fopen(filename, "r")) != NULL) {
     fclose(fp);
@@ -74,28 +77,24 @@ int fileExists(const char* filename) {
   }
 }
 
-/*
- * TODO:
- * -escape quotes in read-in file - DONE
- * -test file exists!
- * -makeindi string concat stuff and use std::string 4 dynamic growing only
- * -
- */
+std::string concatCommand(std::string json, 
+                          const int argc, const char* argv[]) {
+  std::string cmd;
+  cmd.append("R --vanilla --slave -e jsonmatch::jsonmatch('")
+     .append(json).append("','").append(argv[2]).append("'");
+  if (argc >= 4) cmd.append(",").append(argv[3]);
+  if (argc == 5) cmd.append(",").append(argv[4]);
+  cmd.append(") 2>&1\n");
+  return cmd;
+}
+
 int main(const int argc, const char* argv[]) {
   if (argc < 3) {
     printf("gimme at least 2 arguments\n");
     exit(1);
   }
-  std::string in = readInFile(argv[1]);
-  std::string cmd;
-  cmd.append("R --vanilla --slave -e jsonmatch::jsonmatch('")
-   .append(in.c_str()).append("','").append(argv[2]).append("'");
-  if (argc >= 4) cmd.append(",").append(argv[3]);
-  if (argc == 5) cmd.append(",").append(argv[4]);
-  cmd.append(") 2>&1\n");
-  /*
-  printf(s.c_str());
-  */
+  std::string json = fileExists(argv[1]) ? readInFile(argv[1]) : argv[1];
+  std::string cmd = concatCommand(json, argc, argv);
   printf(exec(cmd).c_str());
   return 0;
 }
